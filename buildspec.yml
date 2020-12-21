@@ -7,6 +7,7 @@ phases:
     commands:
       #- pip install --upgrade --force-reinstall . awscli
       - pip install sagemaker
+      - pip install stepfunctions
   
   build:
     commands:
