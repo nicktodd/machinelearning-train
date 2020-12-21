@@ -91,6 +91,8 @@ S3Uploader.upload(local_path=zip_name,
 
 lambda_client = boto3.client('lambda')
 
+lambda_client.delete_function(FunctionName=function_name)
+
 response = lambda_client.create_function(
     FunctionName=function_name,
     Runtime='python3.7',
