@@ -51,7 +51,8 @@ glue_script_location = S3Uploader.upload(local_path='./code/glue_etl.py',
                                session=session)
 glue_client = boto3.client('glue')
 
-response = glue_client.create_job(
+## Updating existing job rather than creating a new one
+response = glue_client.update_job( # change to create job if first time
     Name=job_name,
     Description='PySpark job to extract the data and split in to training and validation data sets',
     Role=glue_role, # you can pass your existing AWS Glue role here if you have used Glue before
