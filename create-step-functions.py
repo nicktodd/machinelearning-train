@@ -218,12 +218,15 @@ workflow_definition = steps.Chain([
 ])
 
 # Got to here. Untested
-workflow = Workflow(
+'''workflow = Workflow(
     name=workflow_name,
     definition=workflow_definition,
     role=workflow_execution_role,
     execution_input=execution_input
-)
+)'''
+
+workflow = Workflow()
+workflow.attach(state_machine_arn='arn:aws:states:eu-west-1:963778699255:stateMachine:MyInferenceRoutine_c020134fb5334562bb3c31e6d02cc77d')
 
 workflow.update(
     definition = workflow_definition,
