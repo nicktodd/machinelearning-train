@@ -24,6 +24,7 @@ region = 'eu-west-1' # boto3.Session().region_name
 # lambda and glue job with new versions
 job_name = 'glue-customer-churn-etl-c020134fb5334562bb3c31e6d02cc77d'
 function_name = 'arn:aws:lambda:eu-west-1:963778699255:function:query-training-status-c020134fb5334562bb3c31e6d02cc77d'
+workflow_name = 'MyInferenceRoutine_c020134fb5334562bb3c31e6d02cc77d'
 
 # specify the roles that will be used by the various artifacts
 workflow_execution_role = os.getenv('workflow_execution_role')
@@ -52,6 +53,7 @@ glue_script_location = S3Uploader.upload(local_path='./code/glue_etl.py',
 glue_client = boto3.client('glue')
 
 ## Updating existing job rather than creating a new one
+# Might want to change this so it deletes the original and then creates a new one
 response = glue_client.update_job( # change to create job if first time
     JobName=job_name,
     JobUpdate = {
@@ -91,8 +93,8 @@ S3Uploader.upload(local_path=zip_name,
 
 lambda_client = boto3.client('lambda')
 
+# delete original lambda before creating the new one
 lambda_client.delete_function(FunctionName=function_name)
-
 response = lambda_client.create_function(
     FunctionName=function_name,
     Runtime='python3.7',
@@ -215,3 +217,22 @@ workflow_definition = steps.Chain([
     check_accuracy_step
 ])
 
+# Got to here. Untested
+workflow = Workflow(
+    name=workflow_name,
+    definition=workflow_definition,
+    role=workflow_execution_role,
+    execution_input=execution_input
+)
+
+workflow.update()
+
+'''execution = workflow.execute(
+    inputs={
+        'TrainingJobName': 'regression-{}'.format(id), # Each Sagemaker Job requires a unique name,
+        'GlueJobName': job_name,
+        'ModelName': 'CustomerChurn-{}'.format(id), # Each Model requires a unique name,
+        'EndpointName': 'CustomerChurn', # Each Endpoint requires a unique name
+        'LambdaFunctionName': function_name
+    }
+)'''
