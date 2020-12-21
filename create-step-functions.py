@@ -218,14 +218,17 @@ workflow_definition = steps.Chain([
 ])
 
 # Got to here. Untested
-workflow = Workflow(
+'''workflow = Workflow(
     name=workflow_name,
     definition=workflow_definition,
     role=workflow_execution_role,
     execution_input=execution_input
-)
+)'''
 
-workflow.update()
+Workflow.update(
+    definition = workflow_definition,
+    role=workflow_execution_role
+)
 
 '''execution = workflow.execute(
     inputs={
