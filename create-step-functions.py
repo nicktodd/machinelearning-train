@@ -243,7 +243,7 @@ check_accuracy_step = steps.states.Choice(
 registry_lambda_step = steps.compute.LambdaStep(
     'Update Model Registry',
     parameters={  
-        "FunctionName": registry_function_name,
+        "FunctionName": "arn:aws:lambda:eu-west-1:963778699255:function:" + registry_function_name,
         'Payload':{
             "TrainingJobName.$": training_job_name,
             'run_id' : "test",  # get the step function run id,
