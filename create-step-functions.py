@@ -229,7 +229,7 @@ lambda_step = steps.compute.LambdaStep(
     parameters={  
         "FunctionName": function_name,
         'Payload':{
-            "TrainingJobName.$": "TrainingJobName.$"
+            "TrainingJobName.$": "$.TrainingJobName"
         }
     }
 )
@@ -246,7 +246,7 @@ registry_lambda_step = steps.compute.LambdaStep(
     parameters={  
         "FunctionName": arn_function_name,
         'Payload':{
-            "TrainingJobName.$": "TrainingJobName.$",
+            "TrainingJobName.$": "$.TrainingJobName",
             'run_id' : "test",  # get the step function run id,
         'environment': "DEV",
         'algorithm': "xgboost",
