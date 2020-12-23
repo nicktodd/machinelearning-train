@@ -246,8 +246,8 @@ registry_lambda_step = steps.compute.LambdaStep(
 )
 
 
-
-endpoint_config_step = steps.EndpointConfigStep(
+# This script does not do the deployment, this however illustrates how it could be done
+'''endpoint_config_step = steps.EndpointConfigStep(
     "Create Model Endpoint Config",
     endpoint_config_name=execution_input['ModelName'],
     model_name=execution_input['ModelName'],
@@ -260,7 +260,7 @@ endpoint_step = steps.EndpointStep(
     endpoint_name=execution_input['EndpointName'],
     endpoint_config_name=execution_input['ModelName'],
     update=False
-)
+)'''
 
 fail_step = steps.states.Fail(
     'Model Accuracy Too Low',
@@ -269,11 +269,11 @@ fail_step = steps.states.Fail(
 
 threshold_rule = steps.choice_rule.ChoiceRule.NumericLessThan(variable=lambda_step.output()['Payload']['trainingMetrics'][0]['Value'], value=.1)
 
-check_accuracy_step.add_choice(rule=threshold_rule, next_step=endpoint_config_step)
+check_accuracy_step.add_choice(rule=threshold_rule, next_step=registry_lambda_step)
 check_accuracy_step.default_choice(next_step=fail_step)
 
-endpoint_config_step.next(endpoint_step)
-endpoint_config_step.next(registry_lambda_step)
+#endpoint_config_step.next(endpoint_step)
+#endpoint_config_step.next(registry_lambda_step)
 
 workflow_definition = steps.Chain([
     etl_step,
