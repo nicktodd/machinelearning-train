@@ -1,7 +1,7 @@
 import boto3
 import datetime
 
-def handler(event):
+def handler(event, context):
     '''
     This Lambda is used to update the model registry.
     Ordinarily it would not be managed from within this pipeline as it would be used by all pipelines,
