@@ -181,13 +181,13 @@ execution_input = ExecutionInput(schema={
     'TrainingJobName': str,
     'GlueJobName': str,
     'ModelName': str,
-    'EndpointName': str,
-    'LambdaFunctionName': str
+    'EndpointName': str
+
 })
 
 etl_step = steps.GlueStartJobRunStep(
     'Extract, Transform, Load',
-    parameters={"JobName": execution_input['GlueJobName'],
+    parameters={"JobName": job_name,
                 "Arguments":{
                     '--S3_SOURCE': data_source,
                     '--S3_DEST': 's3a://{}/{}/'.format(bucket, project_name),
@@ -218,7 +218,7 @@ model_step = steps.ModelStep(
 lambda_step = steps.compute.LambdaStep(
     'Query Training Results',
     parameters={  
-        "FunctionName": execution_input['LambdaFunctionName'],
+        "FunctionName": function_name,
         'Payload':{
             "TrainingJobName.$": '$.TrainingJobName'
         }
@@ -302,12 +302,10 @@ workflow.update(
 )
 
 # Finally, run the workflow!
-execution = workflow.execute(
+'''execution = workflow.execute(
     inputs={
         'TrainingJobName': 'regression-{}'.format(id), # Each Sagemaker Job requires a unique name,
-        'GlueJobName': job_name,
         'ModelName': 'CustomerChurn-{}'.format(id), # Each Model requires a unique name,
         'EndpointName': 'CustomerChurn', # Each Endpoint requires a unique name
-        'LambdaFunctionName': function_name
     }
-)
+)'''
