@@ -229,7 +229,7 @@ lambda_step = steps.compute.LambdaStep(
     parameters={  
         "FunctionName": function_name,
         'Payload':{
-            "TrainingJobName.$": training_job_name
+            "TrainingJobName.$": "TrainingJobName.$"
         }
     }
 )
