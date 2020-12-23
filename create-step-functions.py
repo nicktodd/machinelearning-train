@@ -251,11 +251,11 @@ registry_lambda_step = steps.compute.LambdaStep(
     parameters={  
         "FunctionName": arn_function_name,
         'Payload':{
-            "TrainingJobName.$": "$.TrainingJobName",
-            'run_id' : "test",  # get the step function run id,
-        'environment': "DEV",
-        'algorithm': "xgboost",
-        'model_location' : 's3://{}/{}/output'.format(bucket, project_name)
+            #"TrainingJobName.$": "$.TrainingJobName",
+            'run_id' : project_name,  # get the step function version,
+            'environment': "DEV",
+            'algorithm': "xgboost",
+            'model_location' : 's3://{}/{}/output'.format(bucket, project_name)
         }
     }
 )
