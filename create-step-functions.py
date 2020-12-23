@@ -31,6 +31,7 @@ workflow_execution_role = os.getenv('workflow_execution_role')
 sagemaker_execution_role = os.getenv('sagemaker_execution_role')
 glue_role = os.getenv('glue_role')
 lambda_role = os.getenv('lambda_role')
+registry_lambda_role= os.getenv('model_registry_lambda_role')
 
 
 # normally the data would already be there. In this example we are uploading it. 
@@ -109,6 +110,52 @@ response = lambda_client.create_function(
     MemorySize=128
 )
 
+
+# Create the Lambda that updates the registry
+registry_function_name = "ModelRegistryUpdater"
+registry_zip_name = 'model_registry_lambda.zip'
+registry_lambda_source_code = './code/update_model_registry.py'
+
+registry_zf = zipfile.ZipFile(registry_zip_name, mode='w')
+registry_zf.write(registry_lambda_source_code, arcname=registry_lambda_source_code.split('/')[-1])
+registry_zf.close()
+
+
+S3Uploader.upload(local_path=registry_zip_name, 
+                  desired_s3_uri='s3://{}/{}'.format(bucket, project_name),
+                  session=session)
+
+lambda_client = boto3.client('lambda')
+
+# delete original lambda before creating the new one
+try:
+    # deals with first run. If not there, just ignore the exception
+    lambda_client.delete_function(FunctionName=registry_function_name)
+except:
+    pass
+
+response = lambda_client.create_function(
+    FunctionName=registry_function_name,
+    Runtime='python3.7',
+    Role=registry_lambda_role,
+    Handler='update_model_registry.handler',
+    Code={
+        'S3Bucket': bucket,
+        'S3Key': '{}/{}'.format(project_name, registry_zip_name)
+    },
+    Description='Updates the model registry DynamoDB table.',
+    Timeout=15,
+    MemorySize=128
+)
+
+
+
+
+
+
+
+
+
 # Create the estimator
 container = get_image_uri(region, 'xgboost')
 
@@ -178,9 +225,27 @@ lambda_step = steps.compute.LambdaStep(
     }
 )
 
+
+
 check_accuracy_step = steps.states.Choice(
     'Accuracy > 90%'
 )
+
+registry_lambda_step = steps.compute.LambdaStep(
+    'Update Model Registry',
+    parameters={  
+        "FunctionName": registry_function_name,
+        'Payload':{
+            "TrainingJobName.$": '$.TrainingJobName',
+            'run_id' : "test",  # get the step function run id,
+        'environment': "DEV",
+        'algorithm': "xgboost",
+        'model_location' : 's3://{}/{}/output'.format(bucket, project_name)
+        }
+    }
+)
+
+
 
 endpoint_config_step = steps.EndpointConfigStep(
     "Create Model Endpoint Config",
@@ -208,6 +273,7 @@ check_accuracy_step.add_choice(rule=threshold_rule, next_step=endpoint_config_st
 check_accuracy_step.default_choice(next_step=fail_step)
 
 endpoint_config_step.next(endpoint_step)
+endpoint_config_step.next(registry_lambda_step)
 
 workflow_definition = steps.Chain([
     etl_step,
@@ -217,7 +283,7 @@ workflow_definition = steps.Chain([
     check_accuracy_step
 ])
 
-# Got to here. Untested
+# This can be used to create a brand new workflow
 '''workflow = Workflow(
     name=workflow_name,
     definition=workflow_definition,
@@ -226,14 +292,17 @@ workflow_definition = steps.Chain([
 )'''
 
 
+# This is used to update the existing workflow. 
+# That way you can still see all the step function run history
+# You could alternatively delete and recreate the workflow
 workflow = Workflow.attach(state_machine_arn='arn:aws:states:eu-west-1:963778699255:stateMachine:MyInferenceRoutine_c020134fb5334562bb3c31e6d02cc77d')
-
 workflow.update(
     definition = workflow_definition,
     role=workflow_execution_role
 )
 
-'''execution = workflow.execute(
+# Finally, run the workflow!
+execution = workflow.execute(
     inputs={
         'TrainingJobName': 'regression-{}'.format(id), # Each Sagemaker Job requires a unique name,
         'GlueJobName': job_name,
@@ -241,4 +310,4 @@ workflow.update(
         'EndpointName': 'CustomerChurn', # Each Endpoint requires a unique name
         'LambdaFunctionName': function_name
     }
-)'''
+)
