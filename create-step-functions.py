@@ -14,6 +14,8 @@ from stepfunctions.workflow import Workflow
 
 import os
 
+import datetime
+
 session = sagemaker.Session()
 bucket = session.default_bucket()
 # in this example it needs to be eu-west-1
@@ -26,6 +28,12 @@ job_name = 'glue-customer-churn-etl-c020134fb5334562bb3c31e6d02cc77d'
 function_name = 'arn:aws:lambda:eu-west-1:963778699255:function:query-training-status-c020134fb5334562bb3c31e6d02cc77d'
 workflow_name = 'MyInferenceRoutine_c020134fb5334562bb3c31e6d02cc77d'
 
+today = datetime.datetime.now()
+dateAsString = today.strftime('%Y%m%d%H%M') 
+
+training_job_name = "CustomerChurnTrainingJob" + dateAsString
+
+
 # specify the roles that will be used by the various artifacts
 workflow_execution_role = os.getenv('workflow_execution_role')
 sagemaker_execution_role = os.getenv('sagemaker_execution_role')
@@ -36,7 +44,8 @@ registry_lambda_role= os.getenv('model_registry_lambda_role')
 
 # normally the data would already be there. In this example we are uploading it. 
 # This can be removed for a real project
-project_name = 'ml_deploy'
+project_name = 'customer-churn-' + dateAsString
+
 data_source = S3Uploader.upload(local_path='./data/customer-churn.csv',
                                desired_s3_uri='s3://{}/{}'.format(bucket, project_name),
                                session=session)
@@ -204,7 +213,7 @@ training_step = steps.TrainingStep(
         'train': s3_input(train_data, content_type='csv'),
         'validation': s3_input(validation_data, content_type='csv')
     },
-    job_name=execution_input['TrainingJobName'],
+    job_name=training_job_name,
     wait_for_completion=True
 )
 
@@ -220,7 +229,7 @@ lambda_step = steps.compute.LambdaStep(
     parameters={  
         "FunctionName": function_name,
         'Payload':{
-            "TrainingJobName.$": '$.TrainingJobName'
+            "TrainingJobName.$": training_job_name
         }
     }
 )
@@ -236,7 +245,7 @@ registry_lambda_step = steps.compute.LambdaStep(
     parameters={  
         "FunctionName": registry_function_name,
         'Payload':{
-            "TrainingJobName.$": '$.TrainingJobName',
+            "TrainingJobName.$": training_job_name,
             'run_id' : "test",  # get the step function run id,
         'environment': "DEV",
         'algorithm': "xgboost",
