@@ -312,8 +312,6 @@ workflow.update(
     role=workflow_execution_role
 )
 
-training_job_name = "customer_churn_training_job" + dateAsString
-
 # Finally, run the workflow!
 #execution = workflow.execute(
 #    inputs={
@@ -328,7 +326,7 @@ training_job_name = "customer_churn_training_job" + dateAsString
 
 # now let's create the cloudformation template parameters file ready for the CodeDeploy step in the pipeline
 
-model_data_url = 's3://{}/{}/output'.format(bucket, project_name) + "/" + training_job_name + "/output"
+model_data_url = 's3://{}/{}/output'.format(bucket, project_name) + "/" + training_job_name + "/output/model.tar.gz"
 
 parameter_file_data = {
     
