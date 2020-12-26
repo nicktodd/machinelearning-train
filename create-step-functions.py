@@ -320,10 +320,6 @@ execution = workflow.execute(
    }
 )
 
-# can be commented out to avoid unnecessary costs of keeping build container alive
-execution.get_output(wait=True)
-
-
 # now let's create the cloudformation template parameters file ready for the CodeDeploy step in the pipeline
 
 model_data_url = 's3://{}/{}/output'.format(bucket, project_name) + "/" + training_job_name + "/output/model.tar.gz"
@@ -343,6 +339,14 @@ parameter_file_data = {
 
 print("using this parameter file")
 print(parameter_file_data)
+
+
+
+print("Now waiting for the step function pipeline to complete. This can take up to 5 minutes")
+# can be commented out to avoid unnecessary costs of keeping build container alive
+execution.get_output(wait=True)
+
+
 
 import json
 with open('cloudformation_parameters.json', 'w') as outfile:    
