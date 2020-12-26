@@ -323,7 +323,7 @@ execution = workflow.execute(
 )
 
 # can be commented out to avoid unnecessary costs of keeping build container alive
-execution.wait_for_completion()
+execution.get_output(wait=True)
 
 
 # now let's create the cloudformation template parameters file ready for the CodeDeploy step in the pipeline
