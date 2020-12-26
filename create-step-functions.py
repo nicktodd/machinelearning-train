@@ -18,8 +18,8 @@ import datetime
 
 # get a unique identifier for the job
 # using a timestamp from the launch of the step functions could be a better option
-import uuid
-id = uuid.uuid4().hex
+#import uuid
+#id = uuid.uuid4().hex
 
 session = sagemaker.Session()
 bucket = session.default_bucket()
@@ -33,10 +33,10 @@ job_name = 'glue-customer-churn-etl-c020134fb5334562bb3c31e6d02cc77d'
 function_name = 'arn:aws:lambda:eu-west-1:963778699255:function:query-training-status-c020134fb5334562bb3c31e6d02cc77d'
 workflow_name = 'MyInferenceRoutine_c020134fb5334562bb3c31e6d02cc77d'
 
-#today = datetime.datetime.now()
-#dateAsString = today.strftime('%Y%m%d%H%M') 
+today = datetime.datetime.now()
+dateAsString = today.strftime('%Y%m%d%H%M') 
 
-training_job_name = "CustomerChurnTrainingJob" + id
+training_job_name = "CustomerChurnTrainingJob" + dateAsString
 
 
 # specify the roles that will be used by the various artifacts
@@ -49,7 +49,7 @@ registry_lambda_role= os.getenv('model_registry_lambda_role')
 
 # normally the data would already be there. In this example we are uploading it. 
 # This can be removed for a real project
-project_name = 'customer-churn-' + id
+project_name = 'customer-churn-' + dateAsString
 
 data_source = S3Uploader.upload(local_path='./data/customer-churn.csv',
                                desired_s3_uri='s3://{}/{}'.format(bucket, project_name),
@@ -161,13 +161,6 @@ response = lambda_client.create_function(
     Timeout=15,
     MemorySize=128
 )
-
-
-
-
-
-
-
 
 
 # Create the estimator
