@@ -315,9 +315,33 @@ workflow.update(
 training_job_name = "customer_church_training_job" + dateAsString
 
 # Finally, run the workflow!
-execution = workflow.execute(
-    inputs={
-        'TrainingJobName': training_job_name, # Each Sagemaker Job requires a unique name,
-        'ModelName': model_name # Each Model requires a unique name,   
-    }
-)
+#execution = workflow.execute(
+#    inputs={
+#        'TrainingJobName': training_job_name, # Each Sagemaker Job requires a unique name,
+#        'ModelName': model_name # Each Model requires a unique name,   
+#    }
+#)
+
+# can be commented out to avoid unnecessary costs of keeping build container alive
+#execution.wait_for_completion()
+
+
+# now let's create the cloudformation template parameters file ready for the CodeDeploy step in the pipeline
+parameter_file_data = {
+    
+        "Parameters" : {
+            "ModelName" : model_name,
+            "ModelDataUrl" : 's3://{}/{}/output'.format(bucket, project_name),
+            "TrainingImage": container,
+            "InstanceType" : "ml.t2.xlarge",
+            "InstanceCount": 1,
+            "RoleArn": sagemaker_execution_role
+        }
+    
+}
+import json
+with open('cloudformation_parameters.json', 'w') as outfile:    
+        json.dump(parameter_file_data, outfile)
+
+
+
