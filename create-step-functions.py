@@ -313,15 +313,15 @@ workflow.update(
 )
 
 # Finally, run the workflow!
-#execution = workflow.execute(
-#    inputs={
-#        'TrainingJobName': training_job_name, # Each Sagemaker Job requires a unique name,
-#        'ModelName': model_name # Each Model requires a unique name,   
-#   }
-#)
+execution = workflow.execute(
+    inputs={
+        'TrainingJobName': training_job_name, # Each Sagemaker Job requires a unique name,
+        'ModelName': model_name # Each Model requires a unique name,   
+   }
+)
 
 # can be commented out to avoid unnecessary costs of keeping build container alive
-#execution.get_output(wait=True)
+execution.get_output(wait=True)
 
 
 # now let's create the cloudformation template parameters file ready for the CodeDeploy step in the pipeline
