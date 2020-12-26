@@ -88,7 +88,7 @@ response = glue_client.update_job( # change to create job if first time
         'GlueVersion':'1.0',
         'WorkerType':'Standard',
         'NumberOfWorkers':2,
-        'Timeout':60
+        'Timeout':3 # changed the timeout to 3 minutes
     }
 )
 
