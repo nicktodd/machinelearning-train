@@ -95,6 +95,10 @@ response = glue_client.update_job( # change to create job if first time
     }
 )
 
+
+import time
+time.sleep(60) # wait 60 secs to allow the update of the job to complete. The method is not syncronous!
+
 # Create the Lambda that checks for the quality
 import zipfile
 zip_name = 'query_training_status.zip'
