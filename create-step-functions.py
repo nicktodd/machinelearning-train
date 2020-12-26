@@ -312,7 +312,7 @@ workflow.update(
     role=workflow_execution_role
 )
 
-training_job_name = "customer_church_training_job" + dateAsString
+training_job_name = "customer_churn_training_job" + dateAsString
 
 # Finally, run the workflow!
 #execution = workflow.execute(
@@ -327,11 +327,14 @@ training_job_name = "customer_church_training_job" + dateAsString
 
 
 # now let's create the cloudformation template parameters file ready for the CodeDeploy step in the pipeline
+
+model_data_url = 's3://{}/{}/output'.format(bucket, project_name) + "/" + training_job_name + "/output"
+
 parameter_file_data = {
     
         "Parameters" : {
             "ModelName" : model_name,
-            "ModelDataUrl" : 's3://{}/{}/output'.format(bucket, project_name),
+            "ModelDataUrl" : model_data_url,
             "TrainingImage": container,
             "InstanceType" : "ml.t2.xlarge",
             "InstanceCount": 1,
