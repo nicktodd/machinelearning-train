@@ -315,15 +315,14 @@ workflow.update(
     role=workflow_execution_role
 )
 
-#import time
-#time.sleep(60) # wait 60 secs to allow the update of the workflow to complete. The method is not syncronous!
-
-# retrieve the workflow again to get the modified version
-updated_workflow = Workflow.attach(state_machine_arn='arn:aws:states:eu-west-1:963778699255:stateMachine:MyInferenceRoutine_c020134fb5334562bb3c31e6d02cc77d')
+# Documentation states the following:
+# Updates an existing state machine by modifying its definition and/or role. Executions started immediately after calling this method may use the previous definition and role.
+import time
+time.sleep(60) # wait 60 secs to allow the update of the workflow to complete. The method is not syncronous!
 
 
 # Finally, run the workflow!
-execution = updated_workflow.execute(
+execution = workflow.execute(
     inputs={
         'TrainingJobName': training_job_name, # Each Sagemaker Job requires a unique name,
         'ModelName': model_name # Each Model requires a unique name,   
