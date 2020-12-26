@@ -51,6 +51,9 @@ registry_lambda_role= os.getenv('model_registry_lambda_role')
 # This can be removed for a real project
 project_name = 'customer-churn-' + dateAsString
 
+# used to run the step functions
+model_name='customer-churn-model-' + dateAsString
+
 data_source = S3Uploader.upload(local_path='./data/customer-churn.csv',
                                desired_s3_uri='s3://{}/{}'.format(bucket, project_name),
                                session=session)
@@ -309,11 +312,12 @@ workflow.update(
     role=workflow_execution_role
 )
 
+training_job_name = "customer_church_training_job" + dateAsString
+
 # Finally, run the workflow!
-'''execution = workflow.execute(
+execution = workflow.execute(
     inputs={
-        'TrainingJobName': 'regression-{}'.format(id), # Each Sagemaker Job requires a unique name,
-        'ModelName': 'CustomerChurn-{}'.format(id), # Each Model requires a unique name,
-        'EndpointName': 'CustomerChurn', # Each Endpoint requires a unique name
+        'TrainingJobName': training_job_name, # Each Sagemaker Job requires a unique name,
+        'ModelName': model_name # Each Model requires a unique name,   
     }
-)'''
+)
