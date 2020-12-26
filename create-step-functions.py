@@ -96,8 +96,7 @@ response = glue_client.update_job( # change to create job if first time
 )
 
 
-import time
-time.sleep(60) # wait 60 secs to allow the update of the job to complete. The method is not syncronous!
+
 
 # Create the Lambda that checks for the quality
 import zipfile
@@ -316,8 +315,15 @@ workflow.update(
     role=workflow_execution_role
 )
 
+#import time
+#time.sleep(60) # wait 60 secs to allow the update of the workflow to complete. The method is not syncronous!
+
+# retrieve the workflow again to get the modified version
+updated_workflow = Workflow.attach(state_machine_arn='arn:aws:states:eu-west-1:963778699255:stateMachine:MyInferenceRoutine_c020134fb5334562bb3c31e6d02cc77d')
+
+
 # Finally, run the workflow!
-execution = workflow.execute(
+execution = updated_workflow.execute(
     inputs={
         'TrainingJobName': training_job_name, # Each Sagemaker Job requires a unique name,
         'ModelName': model_name # Each Model requires a unique name,   
