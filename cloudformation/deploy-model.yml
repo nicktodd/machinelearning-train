@@ -23,15 +23,15 @@ Parameters:
     Type: String
 
 Resources:
-  Model:
-    Type: "AWS::SageMaker::Model"
-    Properties: 
-      Containers: 
-        - 
-          Image: !Ref TrainingImage
-          ModelDataUrl: !Ref ModelDataUrl
-      ExecutionRoleArn: !Ref RoleArn
-      ModelName: !Ref ModelName
+  #Model:
+  #  Type: "AWS::SageMaker::Model"
+  #  Properties: 
+  #    Containers: 
+  #      - 
+  #        Image: !Ref TrainingImage
+  #        ModelDataUrl: !Ref ModelDataUrl
+  #    ExecutionRoleArn: !Ref RoleArn
+  #    ModelName: !Ref ModelName
 
   Endpoint:
     Type: "AWS::SageMaker::Endpoint"
@@ -45,7 +45,7 @@ Resources:
     Properties:
       ProductionVariants: 
         -
-          ModelName: !GetAtt Model.ModelName
+          ModelName: !Ref ModelName  #!GetAtt Model.ModelName
           VariantName: variant-1
           InitialInstanceCount: !Ref InstanceCount
           InstanceType: !Ref InstanceType
