@@ -340,7 +340,7 @@ parameter_file_data = {
             "ModelDataUrl" : model_data_url,
             "TrainingImage": container,
             "InstanceType" : "ml.t2.xlarge",
-            "InstanceCount": 1,
+            "InstanceCount": "1",
             "RoleArn": sagemaker_execution_role
         }
     
