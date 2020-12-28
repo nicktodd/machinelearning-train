@@ -14,3 +14,7 @@ phases:
       - python create-step-functions.py
       - echo "Create/Update of the SageMaker Pipeline and execution completed."
  
+artifacts:
+  files:
+    - cloudformation_parameters.json
+    
