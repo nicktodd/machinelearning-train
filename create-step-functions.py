@@ -13,13 +13,8 @@ from stepfunctions.inputs import ExecutionInput
 from stepfunctions.workflow import Workflow
 
 import os
-
 import datetime
 
-# get a unique identifier for the job
-# using a timestamp from the launch of the step functions could be a better option
-#import uuid
-#id = uuid.uuid4().hex
 
 session = sagemaker.Session()
 bucket = session.default_bucket()
@@ -36,8 +31,11 @@ workflow_name = 'MyInferenceRoutine_c020134fb5334562bb3c31e6d02cc77d'
 today = datetime.datetime.now()
 dateAsString = today.strftime('%Y%m%d%H%M') 
 
+# The name used for the project which is used for things like S3 bucket location prefix
+project_name = 'customer-churn-' + dateAsString
+# The name used when the Model is created
+model_name='customer-churn-model-' + dateAsString
 training_job_name = "CustomerChurnTrainingJob" + dateAsString
-
 
 # specify the roles that will be used by the various artifacts
 workflow_execution_role = os.getenv('workflow_execution_role')
@@ -46,13 +44,6 @@ glue_role = os.getenv('glue_role')
 lambda_role = os.getenv('lambda_role')
 registry_lambda_role= os.getenv('model_registry_lambda_role')
 
-
-# normally the data would already be there. In this example we are uploading it. 
-# This can be removed for a real project
-project_name = 'customer-churn-' + dateAsString
-
-# used to run the step functions
-model_name='customer-churn-model-' + dateAsString
 
 data_source = S3Uploader.upload(local_path='./data/customer-churn.csv',
                                desired_s3_uri='s3://{}/{}'.format(bucket, project_name),
@@ -68,6 +59,7 @@ validation_data = 's3://{}/{}/{}/'.format(bucket, project_name, val_prefix)
 glue_script_location = S3Uploader.upload(local_path='./code/glue_etl.py',
                                desired_s3_uri='s3://{}/{}'.format(bucket, project_name),
                                session=session)
+
 glue_client = boto3.client('glue')
 
 ## Updating existing job rather than creating a new one
@@ -91,11 +83,9 @@ response = glue_client.update_job( # change to create job if first time
         'GlueVersion':'1.0',
         'WorkerType':'Standard',
         'NumberOfWorkers':2,
-        'Timeout':3 # changed the timeout to 3 minutes
+        'Timeout':3 
     }
 )
-
-
 
 
 # Create the Lambda that checks for the quality
@@ -116,6 +106,7 @@ lambda_client = boto3.client('lambda')
 
 # delete original lambda before creating the new one
 lambda_client.delete_function(FunctionName=function_name)
+
 response = lambda_client.create_function(
     FunctionName=function_name,
     Runtime='python3.7',
@@ -286,9 +277,6 @@ threshold_rule = steps.choice_rule.ChoiceRule.NumericLessThan(variable=lambda_st
 check_accuracy_step.add_choice(rule=threshold_rule, next_step=registry_lambda_step)
 check_accuracy_step.default_choice(next_step=fail_step)
 
-#endpoint_config_step.next(endpoint_step)
-#endpoint_config_step.next(registry_lambda_step)
-
 workflow_definition = steps.Chain([
     etl_step,
     training_step,
@@ -304,7 +292,6 @@ workflow_definition = steps.Chain([
     role=workflow_execution_role,
     execution_input=execution_input
 )'''
-
 
 # This is used to update the existing workflow. 
 # That way you can still see all the step function run history
