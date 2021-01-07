@@ -68,28 +68,52 @@ glue_client = boto3.client('glue')
 
 ## Updating existing job rather than creating a new one
 # Might want to change this so it deletes the original and then creates a new one
-response = glue_client.update_job( # change to create job if first time
-    JobName=job_name,
-    JobUpdate = {
-        'Description':'PySpark job to extract the data and split in to training and validation data sets',
-        'Role':glue_role, # you can pass your existing AWS Glue role here if you have used Glue before
-        'ExecutionProperty':{
+try:
+    response = glue_client.create_job(
+        Name=job_name,
+        Description='PySpark job to extract the data and split in to training and validation data sets',
+        Role=glue_role, # you can pass your existing AWS Glue role here if you have used Glue before
+        ExecutionProperty={
             'MaxConcurrentRuns': 2
         },
-        'Command':{
+        Command={
             'Name': 'glueetl',
             'ScriptLocation': glue_script_location,
             'PythonVersion': '3'
         },
-        'DefaultArguments':{
+        DefaultArguments={
             '--job-language': 'python'
         },
-        'GlueVersion':'1.0',
-        'WorkerType':'Standard',
-        'NumberOfWorkers':2,
-        'Timeout':3 
-    }
-)
+        GlueVersion='1.0',
+        WorkerType='Standard',
+        NumberOfWorkers=2,
+        Timeout=60
+    )
+
+except:
+    response = glue_client.update_job( # change to create job if first time
+        JobName=job_name,
+        JobUpdate = {
+            'Description':'PySpark job to extract the data and split in to training and validation data sets',
+            'Role':glue_role, # you can pass your existing AWS Glue role here if you have used Glue before
+            'ExecutionProperty':{
+                'MaxConcurrentRuns': 2
+            },
+            'Command':{
+                'Name': 'glueetl',
+                'ScriptLocation': glue_script_location,
+                'PythonVersion': '3'
+            },
+            'DefaultArguments':{
+                '--job-language': 'python'
+            },
+            'GlueVersion':'1.0',
+            'WorkerType':'Standard',
+            'NumberOfWorkers':2,
+            'Timeout':3 
+        }
+    )
+
 
 
 # Create the Lambda that checks for the quality
