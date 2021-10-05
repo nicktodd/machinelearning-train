@@ -22,8 +22,12 @@ import datetime
 
 session = sagemaker.Session()
 bucket = session.default_bucket()
-# in this example it needs to be eu-west-1
-region = 'eu-west-1' # boto3.Session().region_name
+
+region = 'us-east-1' # boto3.Session().region_name
+
+# TODO You need to change these for your initials! Do a quick check to see if anyone else in the class might have the same ones and add more letters if necessary
+your_initials = 'NT'
+
 
 account_id = boto3.client("sts").get_caller_identity()["Account"]
 
@@ -31,17 +35,17 @@ account_id = boto3.client("sts").get_caller_identity()["Account"]
 # we are maintaining these names in order to replace the old versions of the
 # lambda and glue job with new versions
 job_name = 'glue-customer-churn-etl-YOURINITIALS'
-function_name = 'arn:aws:lambda:eu-west-1:' + account_id + ':function:query-training-status-YOURINITIALS'
-workflow_name = 'MyInferenceRoutine_YOURINITIALS'
+function_name = 'arn:aws:lambda:' + region + ':' + account_id + ':function:query-training-status-' + your_initials
+workflow_name = 'MyInferenceRoutine_' + your_initials
 
 today = datetime.datetime.now()
 dateAsString = today.strftime('%Y%m%d%H%M') 
 
 # The name used for the project which is used for things like S3 bucket location prefix
-project_name = 'customer-churn-YOURINITIALS-' + dateAsString
+project_name = 'customer-churn-' + your_initials + '-' + dateAsString
 # The name used when the Model is created
-model_name='customer-churn-model-YOURINITIALS-' + dateAsString
-training_job_name = "CustomerChurnTrainingJob-YOURINITIALS" + dateAsString
+model_name='customer-churn-model-' + your_initials + '-' + dateAsString
+training_job_name = "CustomerChurnTrainingJob-" + your_initials + "-" + dateAsString
 
 # specify the roles that will be used by the various artifacts
 workflow_execution_role = os.getenv('workflow_execution_role')
@@ -156,7 +160,7 @@ response = lambda_client.create_function(
 
 
 # Create the Lambda that updates the registry
-registry_function_name = "ModelRegistryUpdater"
+registry_function_name = "ModelRegistryUpdater-" + your_initials
 registry_zip_name = 'model_registry_lambda.zip'
 registry_lambda_source_code = './code/update_model_registry.py'
 
@@ -263,7 +267,7 @@ check_accuracy_step = steps.states.Choice(
     'Accuracy > 90%'
 )
 
-arn_function_name = "arn:aws:lambda:eu-west-1:" + account_id  + ":function:" + registry_function_name
+arn_function_name = "arn:aws:lambda:" + region + ":" + account_id  + ":function:" + registry_function_name
 registry_lambda_step = steps.compute.LambdaStep(
     'Update Model Registry',
     parameters={  
@@ -318,7 +322,7 @@ try:
     # This is used to update the existing workflow. 
     # That way you can still see all the step function run history
     # You could alternatively delete and recreate the workflow
-    state_machine_arn = 'arn:aws:states:eu-west-1:' + account_id + ':stateMachine:' + workflow_name
+    state_machine_arn = 'arn:aws:states:' + region + ':' + account_id + ':stateMachine:' + workflow_name
     workflow = Workflow.attach(state_machine_arn=state_machine_arn)
     workflow.update(
         definition = workflow_definition,
